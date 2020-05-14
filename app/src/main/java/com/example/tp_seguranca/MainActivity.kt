@@ -2,6 +2,7 @@ package com.example.tp_seguranca
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -16,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.time.Instant
 import java.util.*
@@ -43,7 +45,7 @@ class MainActivity : AppCompatActivity() {
                             ignoreCase = true )
                         && grantResults[i] == PackageManager. PERMISSION_GRANTED
                     ) {
-                        createDeleteFile()
+                        createDeleteFile(latitude = "",longitude = "")
                     } else if (permissions[i]. equals (
                             Manifest.permission. READ_EXTERNAL_STORAGE ,
                             ignoreCase = true )
@@ -61,6 +63,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        btn_listagem.setOnClickListener {
+            startActivity(Intent(this,ListagemActivity::class.java))
+        }
     }
     private fun readMyCurrentCoordinates () {
         val locationManager =
@@ -74,18 +80,18 @@ class MainActivity : AppCompatActivity() {
         } else {
             if (isGPSEnabled) {
                 try {
-                    locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER ,
-                        2000L , 0f , locationListener )
+                    locationManager.requestSingleUpdate(
+                        LocationManager.GPS_PROVIDER
+                       , locationListener,null )
                 } catch (ex: SecurityException) {
                     Log.d( "Permissao" , "Security Exception" )
                 }
             }
             else if (isNetworkEnabled) {
                 try {
-                    locationManager.requestLocationUpdates(
-                        LocationManager. NETWORK_PROVIDER ,
-                        2000L , 0f , locationListener )
+                    locationManager.requestSingleUpdate(
+                        LocationManager. NETWORK_PROVIDER
+                        , locationListener,null )
                 } catch (ex: SecurityException) {
                     Log.d( "Permissao" , "Security Exception" )
                 }
@@ -95,10 +101,16 @@ class MainActivity : AppCompatActivity() {
 
     private val locationListener : LocationListener =
         object : LocationListener {
-            override fun onLocationChanged (location: Location) {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onLocationChanged (location: Location)
+
+            {
+                var longitude = location.longitude.toString()
+                var latitude = location.latitude.toString()
                 Toast.makeText( applicationContext ,
-                    "Lat: $location.latitude | Long: $location.longitude" ,
+                    "Lat: ${location.latitude} | Long: ${location.longitude}" ,
                     Toast. LENGTH_SHORT ).show()
+                createDeleteFile(latitude,longitude)
             }
             override fun onStatusChanged (
                 provider: String , status: Int , extras: Bundle) {}
@@ -127,44 +139,51 @@ class MainActivity : AppCompatActivity() {
     val REQUEST_PERMISSIONS_CODE = 128
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createDeleteFile () {
-//        var dataehr = Date.from(Instant.now())
-//        dataehr.toString()
-        val file = File(getExternalFilesDir( null ) , "data.txt" )
+    private fun createDeleteFile (latitude:String,longitude:String)  {
+
+        var dataehr = Date.from(Instant.now())
+        dataehr.toString()
+        val file = File(getExternalFilesDir( null ) , "$dataehr.crd" )
         if (file.exists()){
             file.delete()
         }
         else {
             try {
                 val os: OutputStream = FileOutputStream(file)
-                os.write("Pequeno Teste".toByteArray())
-                os.close()
-            } catch (e: IOException) {
+
+                    os.write("latitude: $latitude , longitude : $longitude".toByteArray())
+                    os.close()
+
+            }
+                catch (e: IOException) {
                 Log.d( "Permissao" , "Erro de escrita em arquivo" )
             }
         }
+        return
     }
 
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     private fun readFile () {
-        val file = File(getExternalFilesDir( null ) , "data.txt" )
+        val file = File(getExternalFilesDir(null),"teste")
         if (!file.exists()) {
             Toast.makeText( this@MainActivity ,
-                "Arquivo não encontrado" ,
+                "Arquivos não encontrados" ,
                 Toast. LENGTH_SHORT ).show()
             return
         }
-        val text = StringBuilder()
-        try {
-            val br = BufferedReader(FileReader(file))
-            var line: String?
-            while (br.readLine().also { line = it } != null ) {
-                text.append(line)
-                text.append('\n')
-            }
-            br.close()
-        } catch (e: IOException) {
-            Log.d( "Permissao" , "Erro de leitura no arquivo" )
-        }
+        val text = file.name
+        //try {
+
+//            val br = BufferedReader(FileReader(file))
+//            var line: String?
+//            while (br.readLine().also { line = it } != null ) {
+//                text.append(line)
+//                text.append('\n')
+// }
+//            br.close()
+//        } catch (e: IOException) {
+//            Log.d( "Permissao" , "Erro de leitura no arquivo" )
+//        }
         Toast.makeText( this@MainActivity ,
             text.toString() ,
             Toast. LENGTH_SHORT ).show()
@@ -211,9 +230,10 @@ class MainActivity : AppCompatActivity() {
                     REQUEST_PERMISSIONS_CODE )
             }
         } else {
-            createDeleteFile()
+            createDeleteFile(longitude = "",latitude = "")
         }
     }
+    @RequiresApi(Build.VERSION_CODES.KITKAT)
     fun callReadFromSDCard(view: View) {
         if (ContextCompat.checkSelfPermission(
                 this, Manifest.permission. READ_EXTERNAL_STORAGE
@@ -233,5 +253,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             readFile()
         }
+
     }
+
 }
