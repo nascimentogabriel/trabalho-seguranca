@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                 var longitude = location.longitude.toString()
                 var latitude = location.latitude.toString()
                 Toast.makeText( applicationContext ,
-                    "Lat: ${location.latitude} | Long: ${location.longitude}" ,
+                    "Localizacao salva com sucesso" ,
                     Toast. LENGTH_SHORT ).show()
                 createDeleteFile(latitude,longitude)
             }
@@ -139,40 +139,41 @@ class MainActivity : AppCompatActivity() {
     val REQUEST_PERMISSIONS_CODE = 128
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createDeleteFile (latitude:String,longitude:String)  {
 
-        var dataehr = Date.from(Instant.now())
-        dataehr.toString()
-        val file = File(getExternalFilesDir( null ) , "$dataehr.crd" )
-        if (file.exists()){
-            file.delete()
+private fun createDeleteFile (latitude:String,longitude:String)  {
+
+    var dataehr = Date.from(Instant.now())
+    dataehr.toString()
+    val file = File(getExternalFilesDir( null ) , "$dataehr.crd" )
+    if (file.exists()){
+        file.delete()
+    }
+    else {
+        try {
+            val os: OutputStream = FileOutputStream(file)
+
+            os.write("latitude: $latitude , longitude : $longitude".toByteArray())
+            os.close()
+
         }
-        else {
-            try {
-                val os: OutputStream = FileOutputStream(file)
-
-                    os.write("latitude: $latitude , longitude : $longitude".toByteArray())
-                    os.close()
-
-            }
-                catch (e: IOException) {
-                Log.d( "Permissao" , "Erro de escrita em arquivo" )
-            }
+        catch (e: IOException) {
+            Log.d( "Permissao" , "Erro de escrita em arquivo" )
         }
+    }
+    return
+}
+
+@RequiresApi(Build.VERSION_CODES.KITKAT)
+private fun readFile () {
+    val file = File(getExternalFilesDir(null),"teste")
+    if (!file.exists()) {
+        Toast.makeText( this@MainActivity ,
+            "Arquivos não encontrados" ,
+            Toast. LENGTH_SHORT ).show()
         return
     }
-
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    private fun readFile () {
-        val file = File(getExternalFilesDir(null),"teste")
-        if (!file.exists()) {
-            Toast.makeText( this@MainActivity ,
-                "Arquivos não encontrados" ,
-                Toast. LENGTH_SHORT ).show()
-            return
-        }
-        val text = file.name
-        //try {
+    val text = file.name
+    //try {
 
 //            val br = BufferedReader(FileReader(file))
 //            var line: String?
@@ -184,76 +185,76 @@ class MainActivity : AppCompatActivity() {
 //        } catch (e: IOException) {
 //            Log.d( "Permissao" , "Erro de leitura no arquivo" )
 //        }
-        Toast.makeText( this@MainActivity ,
-            text.toString() ,
-            Toast. LENGTH_SHORT ).show()
-    }
+    Toast.makeText( this@MainActivity ,
+        text.toString() ,
+        Toast. LENGTH_SHORT ).show()
+}
 
 
 
-    fun callAccessLocation (view: View?) {
-        val permissionAFL = ContextCompat.checkSelfPermission( this, Manifest.permission.ACCESS_FINE_LOCATION )
-        val permissionACL = ContextCompat.checkSelfPermission( this, Manifest.permission.ACCESS_COARSE_LOCATION )
-        if (permissionAFL != PackageManager.PERMISSION_GRANTED &&
-            permissionACL != PackageManager.PERMISSION_GRANTED ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission.ACCESS_FINE_LOCATION )) {
-                callDialog( "É preciso liberar ACCESS_FINE_LOCATION" ,
-                    arrayOf (Manifest.permission. ACCESS_FINE_LOCATION ))
-            } else {
-                ActivityCompat.requestPermissions( this,
-                    arrayOf (Manifest.permission.ACCESS_FINE_LOCATION ) ,
-                    REQUEST_PERMISSIONS_CODE )
-            }
+fun callAccessLocation (view: View?) {
+    val permissionAFL = ContextCompat.checkSelfPermission( this, Manifest.permission.ACCESS_FINE_LOCATION )
+    val permissionACL = ContextCompat.checkSelfPermission( this, Manifest.permission.ACCESS_COARSE_LOCATION )
+    if (permissionAFL != PackageManager.PERMISSION_GRANTED &&
+        permissionACL != PackageManager.PERMISSION_GRANTED ) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this, Manifest.permission.ACCESS_FINE_LOCATION )) {
+            callDialog( "É preciso liberar ACCESS_FINE_LOCATION" ,
+                arrayOf (Manifest.permission. ACCESS_FINE_LOCATION ))
         } else {
+            ActivityCompat.requestPermissions( this,
+                arrayOf (Manifest.permission.ACCESS_FINE_LOCATION ) ,
+                REQUEST_PERMISSIONS_CODE )
+        }
+    } else {
 
 //            var dataehr = Date.from(Instant.now())
 //            Toast.makeText(this,"$dataehr",Toast.LENGTH_SHORT).show()
-            readMyCurrentCoordinates()
-        }
+        readMyCurrentCoordinates()
     }
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun callWriteOnSDCard(view: View) {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager. PERMISSION_GRANTED ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission. WRITE_EXTERNAL_STORAGE
-                )) {
-                callDialog(
-                    "É preciso liberar WRITE_EXTERNAL_STORAGE" ,
-                    arrayOf (Manifest.permission. WRITE_EXTERNAL_STORAGE )
-                )
-            } else {
-                ActivityCompat.requestPermissions( this,
-                    arrayOf (Manifest.permission. WRITE_EXTERNAL_STORAGE ) ,
-                    REQUEST_PERMISSIONS_CODE )
-            }
+}
+@RequiresApi(Build.VERSION_CODES.O)
+fun callWriteOnSDCard(view: View) {
+    if (ContextCompat.checkSelfPermission(this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) != PackageManager. PERMISSION_GRANTED ) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
+                this, Manifest.permission. WRITE_EXTERNAL_STORAGE
+            )) {
+            callDialog(
+                "É preciso liberar WRITE_EXTERNAL_STORAGE" ,
+                arrayOf (Manifest.permission. WRITE_EXTERNAL_STORAGE )
+            )
         } else {
-            createDeleteFile(longitude = "",latitude = "")
+            ActivityCompat.requestPermissions( this,
+                arrayOf (Manifest.permission. WRITE_EXTERNAL_STORAGE ) ,
+                REQUEST_PERMISSIONS_CODE )
         }
+    } else {
+        createDeleteFile(longitude = "",latitude = "")
     }
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
-    fun callReadFromSDCard(view: View) {
-        if (ContextCompat.checkSelfPermission(
+}
+@RequiresApi(Build.VERSION_CODES.KITKAT)
+fun callReadFromSDCard(view: View) {
+    if (ContextCompat.checkSelfPermission(
+            this, Manifest.permission. READ_EXTERNAL_STORAGE
+        ) != PackageManager. PERMISSION_GRANTED ) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(
                 this, Manifest.permission. READ_EXTERNAL_STORAGE
-            ) != PackageManager. PERMISSION_GRANTED ) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this, Manifest.permission. READ_EXTERNAL_STORAGE
-                )) {
-                callDialog(
-                    "É preciso a liberar READ_EXTERNAL_STORAGE" ,
-                    arrayOf (Manifest.permission. READ_EXTERNAL_STORAGE )
-                )
-            } else {
-                ActivityCompat.requestPermissions( this,
-                    arrayOf (Manifest.permission. READ_EXTERNAL_STORAGE ) ,
-                    REQUEST_PERMISSIONS_CODE )
-            }
+            )) {
+            callDialog(
+                "É preciso a liberar READ_EXTERNAL_STORAGE" ,
+                arrayOf (Manifest.permission. READ_EXTERNAL_STORAGE )
+            )
         } else {
-            readFile()
+            ActivityCompat.requestPermissions( this,
+                arrayOf (Manifest.permission. READ_EXTERNAL_STORAGE ) ,
+                REQUEST_PERMISSIONS_CODE )
         }
-
+    } else {
+        readFile()
     }
+
+}
 
 }

@@ -24,19 +24,20 @@ class ListagemActivity : AppCompatActivity() {
         listView = findViewById<ListView>(R.id.listArquivos)
 
 
+        var file = File(getExternalFilesDir(null)!!.path)
 
-        val list = Environment.getExternalStorageState()
-        textView2.text = list
-        //getExternalFilesDirs("$dataehr.crd")
 
-//        val listitem = arrayOfNulls<File>(list)
-//
-//        for (i in 0 until list.size){
-//            val item = list[i]
-//            listitem[i] = item
-//        }
-//        val adapter = ArrayAdapter(this,android.R.layout.simple_list_item_1,listitem)
-//        listView.adapter = adapter
+
+
+        var lista = mutableListOf<String>()
+
+        file.list().forEach {
+            lista.add(it.toString())
+        }
+
+
+        val adapter = ArrayAdapter(this,android.R.layout.simple_list_item_1,lista)
+        listView.adapter = adapter
          }
 
 }
